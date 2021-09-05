@@ -56,8 +56,65 @@ router.get("/fetch", async(req,res) => {
     }
 });
 
+// Patch request to update product
+router.patch("/update/:id", [auth, product_images.array("image")], async (req,res) => {
+    const updates = Object.keys(req.body);
+    const allowUpdates = [
+        "title",
+        "sub_title",
+        "description",
+        "price",
+        "old_price",
+        "category",
+        "images",
+    ];
+    const isValid = updates.every((update) => allowUpdates.includes(update));
+    if (!isValid) {
+        return res.status(400).send({ error: "No such property to update" });
+    }
+    try{
+        const product = await Product.findOne({
+            _id: req.params.id,
+            owner: req.user._id
+        });
+        if (!product) {
+            return res.status(404).send("No such listing");
+        } else {
+            updates.forEach((update) => {
+                if(update === "images") {
+                    product.images.map((item) => {
+                        const str = item.url;
+                        const res = str.split("/");
+                        s3.deleteObject({
+                            Bucket: process.env.BUCKET_NAME,
+                            Key: res[res.length - 2] + "/" + res[res.length - 1]
+                        }, function (err,data){});
+                    });
+                }
+            });
+        }
+        updates.forEach((update) => {
+            if(update === "images")
+            {
+                let fullPath = [];
+                req.files.map((item) => {
+                    const data = resHandler(item.location);
+                    fullPath.push(data);
+                })
+                product[update] = fullPath;
+            }else {
+                product[update] = req.body[update]
+            }
+        });
+        await product.save();
+        res.status(201).send(product);
+    }catch (err) {
+        res.status(400).send(err);
+    }
+});
+
 //Fetch user's products
-router.get("/fetchUserProducts", auth, async (req, res) => {
+router.get("/fetch_user_products", auth, async (req, res) => {
     try {
         const product = await Product.find({ owner: req.user._id });
         if (!product) {

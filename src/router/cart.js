@@ -18,13 +18,14 @@ router.get("/fetch", auth, async(req, res) => {
 });
 
 // Post request for adding products to cart
-router.post("/add_to_cart/:id", auth, async (req, res) => {
+router.post("/add/:id", auth, async (req, res) => {
     const product_id = req.params.id
     const owner = req.user._id
     let product = await Product.findOne({product_id});
-    let quantity = 1
-    let price = product.price
-    let total = price * quantity
+    let quantity = 1;
+    let price = product.price;
+    let total = price * quantity;
+    let amount = 0;
 
     try {
         let cart = await Cart.findOne({ owner });
@@ -33,20 +34,25 @@ router.post("/add_to_cart/:id", auth, async (req, res) => {
             if (itemIndex > -1) {
                 let productItem = cart.items[itemIndex];
                 quantity = productItem.quantity + 1;
-                productItem.quantity = quantity;
-                productItem.price = price
-                productItem.total = price * quantity
+                amount = cart.amount + price;
 
+                productItem.quantity = quantity;
+                productItem.price = price;
+                productItem.total = price * quantity
                 cart.items[itemIndex] = productItem;
+                cart.amount = amount;
             } else {
+                amount = cart.amount + price
                 cart.items.push({ product_id, quantity, price, total });
+                cart.amount = amount
             }
             cart = await cart.save();
             return res.status(201).send(cart);
         } else {
             const newCart = await Cart.create({
                 owner,
-                items: [{ product_id, quantity, price, total }]
+                items: [{ product_id, quantity, price, total }],
+                amount: total
             });
 
             return res.status(201).send(newCart);
@@ -58,10 +64,11 @@ router.post("/add_to_cart/:id", auth, async (req, res) => {
 });
 
 // Post request to empty cart
-router.post("/empty_cart", auth, async (req, res) => {
+router.post("/clear", auth, async (req, res) => {
+    const owner = req.user._id
+
     try {
-        const cart = await Cart.find({ owner: req.user._id });
-        cart.active = false;
+        let cart = await Cart.findOne({ owner });
         cart.items = [];
         let data = await cart.save();
         res.status(200).json({
@@ -76,6 +83,19 @@ router.post("/empty_cart", auth, async (req, res) => {
             msg: "Something went wrong",
             err: err
         })
+    }
+});
+
+// User order checkout
+router.get("/checkout", auth, async (req, res) => {
+    try {
+        const cart = await Cart.find({ owner: req.user._id });
+        if (!cart) {
+            return res.status(404).send();
+        }
+        res.status(200).send(cart);
+    } catch (e) {
+        res.status(500).send(e);
     }
 });
 

@@ -77,7 +77,7 @@ router.get("/owner", auth, async (req, res) => {
 });
 
 // User forget password otp generation
-router.post("/forgetPass", async (req, res) => {
+router.post("/forget_password", async (req, res) => {
     try {
         const user = await User.findOne({ phone: req.body.phone });
         if (!user) {
@@ -99,7 +99,7 @@ router.post("/forgetPass", async (req, res) => {
 });
 
 // User change password otp generation
-router.post("/changePass", async (req, res) => {
+router.post("/change_password", async (req, res) => {
     try {
         const user = await User.findOne({ phone: req.body.phone });
         console.log(user.phone);
@@ -123,7 +123,7 @@ router.post("/changePass", async (req, res) => {
 });
 
 // Update user password
-router.patch("/updatePassword/:id", async (req, res) => {
+router.patch("/update_password/:id", async (req, res) => {
     const updates = Object.keys(req.body);
     const allowUpdates = ["password"];
     const isValid = updates.every((update) => allowUpdates.includes(update));

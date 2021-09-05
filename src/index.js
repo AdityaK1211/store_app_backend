@@ -1,7 +1,9 @@
 const express = require("express");
 const userRouter = require("./router/user");
+const addressRouter = require("./router/address");
 const productsRouter = require("./router/product");
 const cartRouter = require("./router/cart");
+const orderRouter = require("./router/order");
 const messageRouter = require("./router/message");
 // const aboutRouter = require("./router/about");
 require("../src/db/mongoose");
@@ -11,8 +13,10 @@ const app = express();
 
 app.use(express.json());
 app.use("/users", userRouter);
+app.use("/address", addressRouter);
 app.use("/products", productsRouter);
 app.use("/carts", cartRouter);
+app.use("/orders" , orderRouter);
 app.use("/message" , messageRouter);
 // app.use("/about", aboutRouter);
 app.use('*', (req, res) => {

@@ -34,6 +34,10 @@ const cartSchema = mongoose.Schema(
             ref: "Users"
         },
         items: [itemSchema],
+        amount: {
+            type: Number,
+            required: true,
+        },
     }, { timestamps: true }
 );
 
