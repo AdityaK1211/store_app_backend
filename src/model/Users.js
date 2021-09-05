@@ -67,6 +67,12 @@ const userSchema = mongoose.Schema(
                 }
             }
         },
+        wishlist: [{
+            product_id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Products",
+            },
+        }],
         notification_token: {
             type: String
         },

@@ -1,4 +1,5 @@
 const express = require("express");
+const User = require("../model/Users");
 const Product = require("../model/Products");
 const auth = require("../middleware/auth");
 const router = new express.Router();
@@ -147,6 +148,113 @@ router.delete("/delete/:id", auth, async (req, res) => {
         res.send(product);
     } catch (e) {
         return res.status(500).send(e);
+    }
+});
+
+// Post request to add product to user wishlist
+router.post("/add_to_wishlist/:id", auth, async (req, res) => {
+    const product_id = req.params.id
+
+    try {
+        let user = await User.findOne({_id: req.user._id});
+        let itemIndex = -1;
+        user.wishlist.map((item, index) => {
+            if (item._id == product_id) {
+                itemIndex = index
+            }
+        })
+        if (itemIndex > -1) {
+            user.wishlist.push(product_id)
+            user = await user.save()
+            return res.status(200).send(user)
+        }
+        else {
+            return res.status(400).send('Product already in wishlist!')
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Something went wrong");
+    }
+});
+
+// Post request to delete product to user wishlist
+router.post("/delete_from_wishlist/:id", auth, async (req, res) => {
+    const product_id = req.params.id
+
+    try {
+        let user = await User.findOne({_id: req.user._id});
+        let itemIndex = -1;
+        user.wishlist.map((item, index) => {
+            if (item._id == product_id) {
+                itemIndex = index
+            }
+        })
+
+        if (itemIndex > -1) {
+            user.wishlist.splice(itemIndex, 1);
+            user = await user.save()
+            return res.status(200).send(user)
+        }
+        else {
+            return res.status(400).send('Product not found in wishlist!')
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Something went wrong");
+    }
+});
+
+// Post request to clear wishlist
+router.post("/clear_wishlist", auth, async (req, res) => {
+    try {
+        let user = await User.findOne({_id: req.user._id});
+        user.wishlist = [];
+        user = await user.save();
+        res.status(200).send(user)
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({
+            type: "Invalid",
+            msg: "Something went wrong",
+            err: err
+        })
+    }
+});
+
+// Post request for adding reviews
+router.post("/add_review/:id", auth, async (req, res) => {
+    const product_id = req.params.id
+    const user_id = req.user._id
+    const user_rating = req.body.rating
+    const user_review = req.body.review
+    let rating = 0
+
+    try {
+        let user = await User.findOne({_id: req.user._id});
+        const username = user.username
+        let product = await Product.findOne({_id: product_id});
+        if (product) {
+            let itemIndex = product.reviews.findIndex(p => p.user_id == user_id);
+            if (itemIndex > -1) {
+                let productItem = product.reviews[itemIndex];
+                productItem.user_review = user_review
+                productItem.user_rating = user_rating
+                product.reviews[itemIndex] = productItem;
+            }
+            else {
+                product.reviews.push({
+                    user_id,
+                    username,
+                    user_rating,
+                    user_review
+                })
+            }
+            product = await product.save()
+            return res.status(200).send(product)
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Something went wrong");
     }
 });
 

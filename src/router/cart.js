@@ -63,7 +63,7 @@ router.post("/add/:id", auth, async (req, res) => {
     }
 });
 
-// Post request to empty cart
+// Post request to clear cart
 router.post("/clear", auth, async (req, res) => {
     const owner = req.user._id
 

@@ -40,24 +40,22 @@ const productSchema = mongoose.Schema(
             required: true,
             trim: true
         },
-        rating: {
-            type: Number,
-            trim: true
-        },
         reviews:  [{
-            rating: {
-                type: Number,
-                trim: true
+            user_id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Users"
             },
-            review: {
+            username: {
                 type: String,
                 trim: true
             },
-            user_id: {
-                type: mongoose.Schema.Types.ObjectId,
-                required: true,
-                ref: "Users"
-            }
+            user_rating: {
+                type: Number,
+            },
+            user_review: {
+                type: String,
+                trim: true
+            },
         }]
     }, { timestamps: true }
 );
